@@ -1,6 +1,6 @@
 /* ============================================
    EDITOR-LEAFLET.JS — визуальный редактор зон для Leaflet
-   Сохраняет зоны через POST /save-json на локальный сервер
+   Два инструмента: прямоугольник + полигон
    ============================================ */
 
 (function() {
@@ -11,14 +11,7 @@
 
     console.log('[editor] Режим редактора ВКЛЮЧЁН');
 
-    let fullData = {};   // весь JSON со всеми регионами
-    let zones = [];      // зоны текущего региона
-    let renderedRects = [];
-    let isDrawingMode = false;
-    let drawing = false;
-    let startLatLng = null;
-    let previewRect = null;
-
+    let fullData = {};
     let tries = 0;
     const timer = setInterval(() => {
         tries++;
@@ -38,7 +31,7 @@
 
     async function saveToFile() {
         try {
-            fullData[window.__atlasRegion] = zones;
+            fullData[window.__atlasRegion] = window.__zones;
 
             const res = await fetch('/save-json', {
                 method: 'POST',
@@ -67,9 +60,7 @@
         if (!status) return;
         status.textContent = text;
         status.style.opacity = '1';
-        setTimeout(() => {
-            status.style.opacity = '0';
-        }, 1500);
+        setTimeout(() => { status.style.opacity = '0'; }, 1500);
     }
 
     function init() {
@@ -82,52 +73,85 @@
 
         console.log('[editor] Карта готова. Регион:', regionId);
 
+        let zones = [];
+        window.__zones = zones;
+
+        let renderedShapes = [];
+        let drawMode = null;         // null | 'rect' | 'poly'
+        let drawing = false;
+        let startLatLng = null;
+        let previewRect = null;
+
+        // Для полигона
+        let polyPoints = [];         // массив L.LatLng
+        let polyPolyline = null;     // превью-линия
+        let polyMarkers = [];        // маркеры точек
+        let polyMouseLine = null;    // линия до курсора
+        let lastMouseLatLng = null;
+
         const container = map.getContainer();
 
         // ============================================
-        //   ОТРИСОВКА ЗОН
+        //   ОТРИСОВКА ЗОН (прямоугольник + полигон)
         // ============================================
 
-        function drawZone(zone, idx) {
-            const x1 = zone.x * MAP_WIDTH  / 100;
-            const y1 = zone.y * MAP_HEIGHT / 100;
-            const x2 = (zone.x + zone.w) * MAP_WIDTH  / 100;
-            const y2 = (zone.y + zone.h) * MAP_HEIGHT / 100;
-
-            const topLeft     = map.unproject([x1, y1], MAX_ZOOM);
-            const bottomRight = map.unproject([x2, y2], MAX_ZOOM);
-
-            const rect = L.rectangle([topLeft, bottomRight], {
-                color: 'red',
+        function shapeOptions(active) {
+            return {
+                color: active ? 'lime' : 'red',
                 weight: 2,
-                fillColor: 'red',
+                fillColor: active ? 'lime' : 'red',
                 fillOpacity: 0.25,
                 interactive: true
-            }).addTo(map);
+            };
+        }
 
-            rect.bindTooltip(`${idx + 1}. ${zone.name}`, {
+        function drawZone(zone, idx) {
+            let shape;
+
+            if (zone.points && Array.isArray(zone.points)) {
+                // --- Полигон ---
+                const latlngs = zone.points.map(([x, y]) => {
+                    const px = x * MAP_WIDTH / 100;
+                    const py = y * MAP_HEIGHT / 100;
+                    return map.unproject([px, py], MAX_ZOOM);
+                });
+                shape = L.polygon(latlngs, shapeOptions(false)).addTo(map);
+
+            } else {
+                // --- Прямоугольник ---
+                const x1 = zone.x * MAP_WIDTH / 100;
+                const y1 = zone.y * MAP_HEIGHT / 100;
+                const x2 = (zone.x + zone.w) * MAP_WIDTH / 100;
+                const y2 = (zone.y + zone.h) * MAP_HEIGHT / 100;
+
+                const topLeft     = map.unproject([x1, y1], MAX_ZOOM);
+                const bottomRight = map.unproject([x2, y2], MAX_ZOOM);
+                shape = L.rectangle([topLeft, bottomRight], shapeOptions(false)).addTo(map);
+            }
+
+            shape.bindTooltip(`${idx + 1}. ${zone.name}`, {
                 sticky: true,
                 direction: 'top'
             });
 
-            rect.on('click', async (e) => {
+            shape.on('click', async (e) => {
                 L.DomEvent.stopPropagation(e);
                 if (confirm(`Удалить зону "${zone.name}"?`)) {
-                    rect.remove();
+                    shape.remove();
                     zones.splice(idx, 1);
                     renderAll();
                     await saveToFile();
                 }
             });
 
-            return rect;
+            return shape;
         }
 
         function renderAll() {
-            renderedRects.forEach(r => r.remove());
-            renderedRects = [];
+            renderedShapes.forEach(s => s.remove());
+            renderedShapes = [];
             zones.forEach((z, i) => {
-                renderedRects.push(drawZone(z, i));
+                renderedShapes.push(drawZone(z, i));
             });
             updateCount();
         }
@@ -138,56 +162,72 @@
         }
 
         // ============================================
-        //   РЕЖИМ РИСОВАНИЯ
+        //   РЕЖИМЫ РИСОВАНИЯ
         // ============================================
 
-        function enterDrawMode() {
-            if (isDrawingMode) return;
-            isDrawingMode = true;
-            map.dragging.disable();
-            container.style.cursor = 'crosshair';
-            updatePanelState();
-        }
-
-        function exitDrawMode() {
-            if (!isDrawingMode) return;
-            isDrawingMode = false;
-            map.dragging.enable();
-            container.style.cursor = '';
-            updatePanelState();
-
-            if (previewRect) {
-                previewRect.remove();
-                previewRect = null;
-            }
+        function setDrawMode(mode) {
+            // Сброс предыдущего
+            if (drawMode === 'poly') cancelPolygon();
+            if (previewRect) { previewRect.remove(); previewRect = null; }
             drawing = false;
             startLatLng = null;
+
+            drawMode = mode;
+
+            if (mode) {
+                map.dragging.disable();
+                container.style.cursor = 'crosshair';
+            } else {
+                map.dragging.enable();
+                container.style.cursor = '';
+            }
+
+            updatePanelState();
+            console.log('[editor] Режим:', mode || 'выключен');
         }
 
         function updatePanelState() {
-            const btn = document.getElementById('draw-btn');
+            const rectBtn = document.getElementById('draw-rect-btn');
+            const polyBtn = document.getElementById('draw-poly-btn');
             const status = document.getElementById('draw-status');
-            if (!btn) return;
+            const polyControls = document.getElementById('poly-controls');
 
-            if (isDrawingMode) {
-                btn.textContent = '✖ Выйти из режима рисования';
-                btn.style.background = '#8b1a1a';
-                btn.style.color = '#fff';
-                if (status) status.textContent = '🎯 Режим рисования ВКЛ';
+            if (!rectBtn || !polyBtn) return;
+
+            // Сброс стилей
+            [rectBtn, polyBtn].forEach(b => {
+                b.style.background = '';
+                b.style.color = '';
+            });
+
+            if (drawMode === 'rect') {
+                rectBtn.style.background = '#8b1a1a';
+                rectBtn.style.color = '#fff';
+                rectBtn.textContent = '✖ Прямоугольник (активен)';
+                polyBtn.textContent = '⬡ Полигон';
+                if (status) status.textContent = '🎯 Тяни мышкой по карте';
+                if (polyControls) polyControls.style.display = 'none';
+            } else if (drawMode === 'poly') {
+                polyBtn.style.background = '#8b1a1a';
+                polyBtn.style.color = '#fff';
+                polyBtn.textContent = '✖ Полигон (активен)';
+                rectBtn.textContent = '➕ Прямоугольник';
+                if (status) status.textContent = '🎯 Кликай точки. Enter — завершить, Esc — отмена. Точек: ' + polyPoints.length;
+                if (polyControls) polyControls.style.display = polyPoints.length > 0 ? 'block' : 'none';
             } else {
-                btn.textContent = '➕ Добавить зону';
-                btn.style.background = '';
-                btn.style.color = '';
+                rectBtn.textContent = '➕ Прямоугольник';
+                polyBtn.textContent = '⬡ Полигон';
                 if (status) status.textContent = '';
+                if (polyControls) polyControls.style.display = 'none';
             }
         }
 
         // ============================================
-        //   ОБРАБОТЧИКИ МЫШИ
+        //   ПРЯМОУГОЛЬНИК
         // ============================================
 
         container.addEventListener('mousedown', function(e) {
-            if (!isDrawingMode) return;
+            if (drawMode !== 'rect') return;
             if (e.button !== 0) return;
 
             e.preventDefault();
@@ -198,35 +238,43 @@
         }, true);
 
         document.addEventListener('mousemove', function(e) {
-            if (!drawing || !startLatLng) return;
+            // Превью прямоугольника
+            if (drawMode === 'rect' && drawing && startLatLng) {
+                const currentLatLng = map.mouseEventToLatLng(e);
 
-            const currentLatLng = map.mouseEventToLatLng(e);
+                const sw = L.latLng(
+                    Math.min(startLatLng.lat, currentLatLng.lat),
+                    Math.min(startLatLng.lng, currentLatLng.lng)
+                );
+                const ne = L.latLng(
+                    Math.max(startLatLng.lat, currentLatLng.lat),
+                    Math.max(startLatLng.lng, currentLatLng.lng)
+                );
+                const bounds = L.latLngBounds(sw, ne);
 
-            const sw = L.latLng(
-                Math.min(startLatLng.lat, currentLatLng.lat),
-                Math.min(startLatLng.lng, currentLatLng.lng)
-            );
-            const ne = L.latLng(
-                Math.max(startLatLng.lat, currentLatLng.lat),
-                Math.max(startLatLng.lng, currentLatLng.lng)
-            );
-            const bounds = L.latLngBounds(sw, ne);
+                if (previewRect) {
+                    previewRect.setBounds(bounds);
+                } else {
+                    previewRect = L.rectangle(bounds, {
+                        color: 'lime',
+                        weight: 2,
+                        dashArray: '6 4',
+                        fillColor: 'lime',
+                        fillOpacity: 0.2,
+                        interactive: false
+                    }).addTo(map);
+                }
+            }
 
-            if (previewRect) {
-                previewRect.setBounds(bounds);
-            } else {
-                previewRect = L.rectangle(bounds, {
-                    color: 'lime',
-                    weight: 2,
-                    dashArray: '6 4',
-                    fillColor: 'lime',
-                    fillOpacity: 0.2,
-                    interactive: false
-                }).addTo(map);
+            // Превью полигона (линия до курсора)
+            if (drawMode === 'poly' && polyPoints.length > 0) {
+                lastMouseLatLng = map.mouseEventToLatLng(e);
+                updatePolyMouseLine();
             }
         }, true);
 
         document.addEventListener('mouseup', async function(e) {
+            if (drawMode !== 'rect') return;
             if (!drawing || !startLatLng) return;
 
             const endLatLng = map.mouseEventToLatLng(e);
@@ -251,45 +299,166 @@
             const pw = ((bottomRightPx.x - topLeftPx.x) / MAP_WIDTH) * 100;
             const ph = ((bottomRightPx.y - topLeftPx.y) / MAP_HEIGHT) * 100;
 
-            if (previewRect) {
-                previewRect.remove();
-                previewRect = null;
-            }
             drawing = false;
+            const savedStartLatLng = startLatLng;
             startLatLng = null;
 
             if (pw < 0.01 || ph < 0.01) {
                 console.log('[editor] Слишком маленькая зона, отмена');
+                if (previewRect) { previewRect.remove(); previewRect = null; }
                 return;
             }
 
-            const name = prompt('1/3. Название локации:');
-            if (!name) return;
+            // Preview остаётся на экране, пока вводим данные
+            const zone = await askZoneData();
 
-            const autoUrl = `https://wowpedia.fandom.com/ru/wiki/${encodeURIComponent(name.replace(/ /g, '_'))}`;
-            const url = prompt('2/3. URL статьи (можно вписать английский вариант):', autoUrl);
-            if (url === null) return;
+            // Теперь убираем preview
+            if (previewRect) { previewRect.remove(); previewRect = null; }
 
-            const desc = prompt('3/3. Короткое описание (можно пропустить):', '');
-            if (desc === null) return;
+            if (!zone) return;
 
-            zones.push({
-                name: name,
-                x: Math.round(px * 10) / 10,
-                y: Math.round(py * 10) / 10,
-                w: Math.round(pw * 10) / 10,
-                h: Math.round(ph * 10) / 10,
-                url: url || autoUrl,
-                desc: desc.trim()
-            });
+            zone.x = Math.round(px * 100) / 100;
+            zone.y = Math.round(py * 100) / 100;
+            zone.w = Math.round(pw * 100) / 100;
+            zone.h = Math.round(ph * 100) / 100;
 
-            console.log('[editor] Добавлена зона:', name);
+            zones.push(zone);
+            console.log('[editor] Добавлена зона:', zone.name);
             renderAll();
             await saveToFile();
         }, true);
 
+        // ============================================
+        //   ПОЛИГОН
+        // ============================================
+
+        map.on('click', function(e) {
+            if (drawMode !== 'poly') return;
+
+            // Добавляем точку
+            polyPoints.push(e.latlng);
+
+            // Маркер точки
+            const marker = L.circleMarker(e.latlng, {
+                radius: 5,
+                color: '#00ff00',
+                fillColor: '#00ff00',
+                fillOpacity: 1,
+                interactive: false
+            }).addTo(map);
+            polyMarkers.push(marker);
+
+            // Обновляем линию
+            updatePolyLine();
+            updatePanelState();
+
+            console.log('[editor] Точка', polyPoints.length, ':', e.latlng);
+        });
+
+        function updatePolyLine() {
+            if (polyPolyline) polyPolyline.remove();
+
+            // Линия по точкам + до курсора
+            const allPoints = polyPoints.slice();
+            if (lastMouseLatLng) allPoints.push(lastMouseLatLng);
+
+            polyPolyline = L.polyline(allPoints, {
+                color: 'lime',
+                weight: 2,
+                dashArray: '6 4',
+                interactive: false
+            }).addTo(map);
+        }
+
+        function updatePolyMouseLine() {
+            if (polyPolyline) polyPolyline.remove();
+
+            const allPoints = polyPoints.slice();
+            if (lastMouseLatLng) allPoints.push(lastMouseLatLng);
+
+            polyPolyline = L.polyline(allPoints, {
+                color: 'lime',
+                weight: 2,
+                dashArray: '6 4',
+                interactive: false
+            }).addTo(map);
+        }
+
+        function cancelPolygon() {
+            polyMarkers.forEach(m => m.remove());
+            polyMarkers = [];
+            if (polyPolyline) { polyPolyline.remove(); polyPolyline = null; }
+            polyPoints = [];
+            lastMouseLatLng = null;
+            updatePanelState();
+            console.log('[editor] Полигон отменён');
+        }
+
+        async function finishPolygon() {
+            if (polyPoints.length < 3) {
+                alert('Нужно минимум 3 точки для полигона');
+                return;
+            }
+
+            // Конвертируем в проценты
+            const points = polyPoints.map(latlng => {
+                const p = map.project(latlng, MAX_ZOOM);
+                return [
+                    Math.round((p.x / MAP_WIDTH) * 100 * 100) / 100,
+                    Math.round((p.y / MAP_HEIGHT) * 100 * 100) / 100
+                ];
+            });
+
+            const zone = await askZoneData();
+            if (!zone) return;
+
+            zone.points = points;
+
+            zones.push(zone);
+            console.log('[editor] Добавлен полигон:', zone.name);
+
+            cancelPolygon();
+            renderAll();
+            await saveToFile();
+        }
+
+        // ============================================
+        //   ОБЩИЙ ДИАЛОГ ВВОДА
+        // ============================================
+
+        async function askZoneData() {
+            const name = prompt('1/3. Название локации:');
+            if (!name) return null;
+
+            const autoUrl = `https://wowpedia.fandom.com/ru/wiki/${encodeURIComponent(name.replace(/ /g, '_'))}`;
+            const url = prompt('2/3. URL статьи (можно вписать английский вариант):', autoUrl);
+            if (url === null) return null;
+
+            const desc = prompt('3/3. Короткое описание (можно пропустить):', '');
+            if (desc === null) return null;
+
+            return {
+                name: name,
+                url: url || autoUrl,
+                desc: desc.trim()
+            };
+        }
+
+        // ============================================
+        //   КЛАВИАТУРА
+        // ============================================
+
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && isDrawingMode) exitDrawMode();
+            if (e.key === 'Escape') {
+                if (drawMode === 'poly' && polyPoints.length > 0) {
+                    cancelPolygon();
+                } else if (drawMode) {
+                    setDrawMode(null);
+                }
+            }
+            if (e.key === 'Enter' && drawMode === 'poly' && polyPoints.length >= 3) {
+                finishPolygon();
+            }
         });
 
         // ============================================
@@ -304,31 +473,49 @@
                 <div class="editor-info">Регион: <b>${regionId}</b></div>
                 <div class="editor-info">Зон: <b id="zone-count">${zones.length}</b></div>
                 <div class="editor-help">
-                    • <b>Нажми "Добавить зону"</b><br>
-                    • <b>Протяни мышкой</b> по карте<br>
-                    • <b>Клик по красной зоне</b> → удалить<br>
-                    • <b>Esc</b> → выйти из режима
+                    <b>Прямоугольник:</b><br>
+                    • Нажми → протяни мышкой<br>
+                    <b>Полигон:</b><br>
+                    • Нажми → кликай точки<br>
+                    • <b>Enter</b> — завершить<br>
+                    • <b>Esc</b> — отмена<br>
+                    <br>
+                    • Клик по зоне → удалить
                 </div>
-                <div id="save-status" class="editor-status"></div>
-                <button id="draw-btn" class="editor-btn">➕ Добавить зону</button>
+                <button id="draw-rect-btn" class="editor-btn">➕ Прямоугольник</button>
+                <button id="draw-poly-btn" class="editor-btn">⬡ Полигон</button>
+                <div id="poly-controls" style="display:none">
+                    <button id="poly-finish-btn" class="editor-btn">✅ Завершить (Enter)</button>
+                    <button id="poly-cancel-btn" class="editor-btn editor-btn-danger">❌ Отменить (Esc)</button>
+                </div>
                 <div id="draw-status" class="editor-status"></div>
+                <div id="save-status" class="editor-status"></div>
                 <button id="export-btn" class="editor-btn">📋 Скопировать JSON</button>
                 <button id="clear-btn" class="editor-btn editor-btn-danger">🗑 Очистить всё</button>
             `;
             document.body.appendChild(panel);
 
-            document.getElementById('draw-btn').addEventListener('click', () => {
-                if (isDrawingMode) exitDrawMode();
-                else enterDrawMode();
+            document.getElementById('draw-rect-btn').addEventListener('click', () => {
+                setDrawMode(drawMode === 'rect' ? null : 'rect');
             });
+
+            document.getElementById('draw-poly-btn').addEventListener('click', () => {
+                if (drawMode === 'poly') {
+                    setDrawMode(null);
+                } else {
+                    setDrawMode('poly');
+                }
+            });
+
+            document.getElementById('poly-finish-btn').addEventListener('click', finishPolygon);
+            document.getElementById('poly-cancel-btn').addEventListener('click', cancelPolygon);
 
             document.getElementById('export-btn').addEventListener('click', () => {
                 const output = {};
                 output[regionId] = zones;
                 const json = JSON.stringify(output, null, 2);
-
                 navigator.clipboard.writeText(json)
-                    .then(() => alert('✅ JSON скопирован в буфер обмена!'))
+                    .then(() => alert('✅ JSON скопирован!'))
                     .catch(() => {
                         const ta = document.createElement('textarea');
                         ta.value = json;
@@ -342,7 +529,7 @@
 
             document.getElementById('clear-btn').addEventListener('click', async () => {
                 if (confirm('Удалить ВСЕ зоны этого региона?')) {
-                    zones = [];
+                    zones.length = 0;
                     renderAll();
                     await saveToFile();
                 }
@@ -358,6 +545,7 @@
             .then(data => {
                 fullData = data;
                 zones = data[regionId] || [];
+                window.__zones = zones;
                 console.log('[editor] Загружено зон:', zones.length);
                 renderAll();
                 createPanel();
