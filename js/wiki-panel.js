@@ -33,33 +33,44 @@
         document.querySelector('.map-wrapper')?.classList.add('panel-open');
     }
 
-    // --- Открытие панели для зоны ---
-    function loadZone(zone) {
-        openPanel();
+function loadZone(zone) {
+    openPanel();
 
-        panelTitle.textContent = zone.name;
-        panelLink.href = zone.url || '#';
+    panelTitle.textContent = zone.name;
 
-        let html = '';
+    const url = (zone.url || '').trim();
+    const hasValidUrl = url && url.startsWith('http');
 
-        // Картинка (если указана в zones.json полем "img")
-        if (zone.img) {
-            html += `<img src="../img/locations/${zone.img}" alt="${zone.name}">`;
-        }
-
-        // Описание
-        if (zone.desc) {
-            html += `<p>${zone.desc}</p>`;
-        } else {
-            html += `<p style="color:var(--text-dim);font-style:italic">
-                Описание для этой локации пока не добавлено.<br>
-                Нажмите «Читать полностью», чтобы открыть статью на Wowpedia.
-            </p>`;
-        }
-
-        panelBody.innerHTML = html;
-        panelBody.scrollTop = 0;
+    // Ссылка «Читать полностью» — показываем только при валидном URL
+    if (hasValidUrl) {
+        panelLink.href = url;
+        panelLink.style.display = '';
+    } else {
+        panelLink.href = '#';
+        panelLink.style.display = 'none';
     }
+
+    let html = '';
+
+    // Картинка (если указана в zones.json полем "img")
+    if (zone.img) {
+        html += `<img src="../img/locations/${zone.img}" alt="${zone.name}">`;
+    }
+
+    // Описание
+    if (zone.desc) {
+        html += `<p>${zone.desc}</p>`;
+    } else {
+        let fallback = 'Описание для этой локации пока не добавлено.';
+        if (hasValidUrl) {
+            fallback += '<br>Нажмите «Читать полностью», чтобы открыть статью на Wowpedia.';
+        }
+        html += `<p style="color:var(--text-dim);font-style:italic">${fallback}</p>`;
+    }
+
+    panelBody.innerHTML = html;
+    panelBody.scrollTop = 0;
+}
 
     // --- Экспорт ---
     window.__openWikiPanel = loadZone;

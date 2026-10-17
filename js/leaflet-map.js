@@ -138,14 +138,29 @@
 
                 // Клик — переход или панель
                 shape.on('click', function() {
-                    if (!zone.url.startsWith('http')) {
-                        window.location.href = zone.url;
+                    const url = (zone.url || '').trim();
+                    const isExternal = url.startsWith('http');
+                    const isValidInternal = url && !isExternal && url !== '-';
+
+                    // Внутренняя ссылка (например, на другой html-файл)
+                    if (isValidInternal) {
+                        window.location.href = url;
                         return;
                     }
+
+                    // Внешняя ссылка (Wowpedia) — открываем панель
+                    if (isExternal) {
+                        if (window.__openWikiPanel) {
+                            window.__openWikiPanel(zone);
+                        } else {
+                            window.open(url, '_blank');
+                        }
+                        return;
+                    }
+
+                    // url "-" или пусто — просто открываем панель с описанием
                     if (window.__openWikiPanel) {
                         window.__openWikiPanel(zone);
-                    } else {
-                        window.open(zone.url, '_blank');
                     }
                 });
 

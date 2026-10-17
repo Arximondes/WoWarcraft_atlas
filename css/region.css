@@ -68,8 +68,28 @@
     text-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
 }
 
-.header-spacer {
-    width: 140px;
+/* Ссылка «О проекте» в шапке региона */
+.header-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 140px;
+    padding: 10px 18px;
+    background-color: transparent;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-main);
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: all 0.3s;
+    white-space: nowrap;
+}
+
+.header-link:hover {
+    background-color: var(--bg-card-hover);
+    border-color: var(--gold);
+    color: var(--gold);
 }
 
 /* ============================================
@@ -622,28 +642,25 @@
         flex-wrap: wrap;
         gap: 10px;
     }
-
     .region-title {
         order: -1;
         flex-basis: 100%;
         font-size: 1.3rem;
         margin-bottom: 5px;
     }
-
-    .header-spacer {
-        display: none;
+    .header-link {
+        min-width: auto;
+        padding: 8px 14px;
+        font-size: 0.85rem;
     }
-
     .back-btn {
         padding: 8px 14px;
         font-size: 0.85rem;
     }
-
     .hint {
         font-size: 0.8rem;
         padding: 10px 15px;
     }
-
     .map-wrapper {
         padding: 10px;
     }
