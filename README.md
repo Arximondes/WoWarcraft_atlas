@@ -1,1 +1,1 @@
-# azeroth_atlas
+# WoWarcraft_atlas
