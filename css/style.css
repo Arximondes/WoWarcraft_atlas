@@ -408,3 +408,25 @@ body {
     font-size: 0.9em;
     font-family: 'Courier New', monospace;
 }
+
+
+.lang-switcher {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-title);
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text-dim);
+}
+
+.lang-btn {
+    color: var(--text-dim);
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.lang-btn:hover, .lang-btn.active {
+    color: var(--gold);
+    text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+}

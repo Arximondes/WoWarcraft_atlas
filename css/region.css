@@ -675,3 +675,25 @@
         padding: 8px 12px;
     }
 }
+
+/* Ручка для перемещения (в центре) */
+.handle-move {
+    background-color: var(--gold);
+    border: 2px solid #000;
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.8);
+    cursor: move;
+}
+
+/* Ручки для растягивания (по углам) */
+.handle-resize {
+    background-color: #fff;
+    border: 2px solid #000;
+    border-radius: 3px;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+}
+
+.handle-resize.nw { cursor: nwse-resize; }
+.handle-resize.ne { cursor: nesw-resize; }
+.handle-resize.sw { cursor: nesw-resize; }
+.handle-resize.se { cursor: nwse-resize; }

@@ -1,6 +1,20 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
+    <!-- Yandex.Metrika counter -->
+    <script type="text/javascript">
+        (function(m,e,t,r,i,k,a){
+            m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+            m[i].l=1*new Date();
+            for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+            k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+        })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=113787306', 'ym');
+
+        ym(113787306, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+    </script>
+    <noscript><div><img src="https://mc.yandex.ru/watch/113787306" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+    <!-- /Yandex.Metrika counter -->
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="О проекте «Атлас Варкрафта» — интерактивном атласе вселенной Warcraft.">
@@ -18,19 +32,24 @@
         <div class="container header-inner">
             <a href="index.html" class="logo">
                 <span class="logo-icon">⚔</span>
-                <span class="logo-text">Атлас Варкрафта</span>
+                <span class="logo-text"data-i18n="logo_text">Атлас Варкрафта</span>
             </a>
             <nav class="main-nav">
-                <a href="index.html">Главная</a>
-                <a href="about.html" class="active">О проекте</a>
+                <a href="index.html" data-i18n="nav_home">Главная</a>
+                <a href="about.html" class="active" data-i18n="nav_about">О проекте</a>
             </nav>
+            <div class="lang-switcher">
+                <a href="?lang=ru" class="lang-btn" id="lang-ru">RU</a>
+                <span>|</span>
+                <a href="?lang=en" class="lang-btn" id="lang-en">EN</a>
+            </div>
         </div>
     </header>
 
     <section class="hero">
         <div class="container">
-            <h1 class="hero-title">О проекте</h1>
-            <p class="hero-subtitle">
+            <h1 class="hero-title" data-i18n="about_title">О проекте</h1>
+            <p class="hero-subtitle" data-i18n="about_subtitle">
                 «Атлас Варкрафта» — учебный интерактивный атлас миров вселенной Warcraft.
             </p>
         </div>
@@ -39,8 +58,8 @@
     <main class="container">
         <article class="about-article">
 
-            <h2 class="section-title">Что это такое</h2>
-            <p>
+            <h2 class="section-title" data-i18n="about_what">Что это такое</h2>
+            <p data-i18n="about_what_p1">
                 «Атлас Варкрафта» — некоммерческий учебный проект, посвящённый вселенной
                 Warcraft. На сайте собраны интерактивные карты основных миров: Азерота,
                 Дренора, Запределья, Аргуса и Тёмных Земель. Каждая карта разбита на
@@ -48,29 +67,29 @@
                 на сайте или перейти к полной статье на Wowpedia.
             </p>
 
-            <h2 class="section-title">Как пользоваться</h2>
+            <h2 class="section-title" data-i18n="about_how">Как пользоваться</h2>
             <ul>
-                <li>Выберите мир на главной странице.</li>
-                <li>Наведите курсор на регион — появится всплывающая подсказка с названием.</li>
-                <li>Кликните по региону — откроется боковая панель с картинкой, описанием и ссылкой на полную статью.</li>
-                <li>Колесо мыши — зум, перетаскивание — навигация по карте.</li>
-                <li>Кнопка «⤢» или двойной клик по карте сбрасывают масштаб.</li>
+                <li data-i18n="about_how_li1">Выберите мир на главной странице.</li>
+                <li data-i18n="about_how_li2">Наведите курсор на регион — появится всплывающая подсказка с названием.</li>
+                <li data-i18n="about_how_li3">Кликните по региону — откроется боковая панель с картинкой, описанием и ссылкой на полную статью.</li>
+                <li data-i18n="about_how_li4">Колесо мыши — зум, перетаскивание — навигация по карте.</li>
+                <li data-i18n="about_how_li5">Кнопка «⤢» или двойной клик по карте сбрасывают масштаб.</li>
             </ul>
 
-            <h2 class="section-title">Источники</h2>
-            <p>
+            <h2 class="section-title" data-i18n="about_sources">Источники</h2>
+            <p data-i18n="about_sources_p1">
                 Основным источником информации служит
                 <a href="https://wowpedia.fandom.com/" target="_blank" rel="noopener">Wowpedia</a>
                 — крупнейшая фанатская энциклопедия по вселенной Warcraft. Описания
                 локаций составлены на основе материалов сайта и адаптированы для читателя.
             </p>
-            <p>
+            <p data-i18n="about_sources_p2">
                 Изображения (текстуры) карт для интерактивного атласа были взяты с проекта 
                 <a href="https://maps.dadesign.ru/" target="_blank" rel="noopener">maps.dadesign.ru</a>.
             </p>
 
-            <h2 class="section-title">Дисклеймер</h2>
-            <p>
+            <h2 class="section-title" data-i18n="about_disclaimer">Дисклеймер</h2>
+            <p data-i18n="about_disclaimer_p">
                 World of Warcraft © Blizzard Entertainment. Все названия, изображения
                 и лор вселенной принадлежат их правообладателям. Проект создан в
                 образовательных целях и не претендует на коммерческую выгоду.
@@ -81,13 +100,12 @@
 
     <footer class="site-footer">
         <div class="container">
-            <p>© 2025-2026 Атлас Варкрафта. Учебный проект.</p>
-            <p class="footer-note">
-                World of Warcraft © Blizzard Entertainment.
-                Все материалы принадлежат их правообладателям.
-            </p>
+            <p data-i18n="footer_text_index">© 2025-2026 Атлас Варкрафта. Учебный проект.</p>
+            <p class="footer-note" data-i18n="footer_note_index">World of Warcraft © Blizzard Entertainment. Все материалы принадлежат их правообладателям.</p>
         </div>
     </footer>
 
+    <!-- Подключаем скрипт языка -->
+    <script src="js/lang.js"></script>
 </body>
 </html>

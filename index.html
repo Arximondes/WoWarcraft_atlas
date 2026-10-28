@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-        <!-- Yandex.Metrika counter -->
+    <!-- Yandex.Metrika counter -->
     <script type="text/javascript">
         (function(m,e,t,r,i,k,a){
             m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
@@ -14,6 +14,7 @@
     </script>
     <noscript><div><img src="https://mc.yandex.ru/watch/113787306" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
     <!-- /Yandex.Metrika counter -->
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Интерактивный атлас регионов вселенной Warcraft. Кликабельные карты с переходом на статьи Wowpedia.">
@@ -32,20 +33,25 @@
         <div class="container header-inner">
             <a href="index.html" class="logo">
                 <span class="logo-icon">⚔</span>
-                <span class="logo-text">Атлас Варкрафта</span>
+                <span class="logo-text" data-i18n="logo_text">Атлас Варкрафта</span>
             </a>
             <nav class="main-nav">
-                <a href="index.html" class="active">Главная</a>
-                <a href="about.html">О проекте</a>
+                <a href="index.html" class="active" data-i18n="nav_home">Главная</a>
+                <a href="about.html" data-i18n="nav_about">О проекте</a>
             </nav>
+            <div class="lang-switcher">
+                <a href="?lang=ru" class="lang-btn" id="lang-ru">RU</a>
+                <span>|</span>
+                <a href="?lang=en" class="lang-btn" id="lang-en">EN</a>
+            </div>
         </div>
     </header>
 
     <!-- ===== ГЛАВНЫЙ БАННЕР ===== -->
     <section class="hero">
         <div class="container">
-            <h1 class="hero-title">Интерактивный атлас</h1>
-            <p class="hero-subtitle">
+            <h1 class="hero-title" data-i18n="hero_title">Интерактивный атлас</h1>
+            <p class="hero-subtitle" data-i18n="hero_subtitle">
                 Исследуйте миры вселенной Warcraft. Кликайте на названия локаций 
                 на карте и переходите к подробным статьям на Wowpedia.
             </p>
@@ -54,18 +60,18 @@
 
     <!-- ===== СЕТКА РЕГИОНОВ ===== -->
     <main class="container">
-        <h2 class="section-title">Выберите мир</h2>
+        <h2 class="section-title" data-i18n="section_title">Выберите мир</h2>
 
         <div class="regions-grid regions-grid-5">
 
-            <!-- Азерот — весь мир, широкая карточка -->
+            <!-- Азерот -->
             <a href="regions/azeroth.html" class="region-card region-card-featured">
                 <div class="region-image" style="background-image: url('img/maps/azeroth.webp');">
                     <div class="region-overlay"></div>
                 </div>
                 <div class="region-content">
-                    <h3 class="region-name">Азерот</h3>
-                    <p class="region-desc">Весь мир целиком. Выберите континент</p>
+                    <h3 class="region-name" data-i18n="region_azeroth">Азерот</h3>
+                    <p class="region-desc" data-i18n="region_azeroth_desc">Весь мир целиком. Выберите континент</p>
                 </div>
             </a>
 
@@ -75,8 +81,8 @@
                     <div class="region-overlay"></div>
                 </div>
                 <div class="region-content">
-                    <h3 class="region-name">Дренор</h3>
-                    <p class="region-desc">Древний мир орков до разрушения</p>
+                    <h3 class="region-name" data-i18n="region_draenor">Дренор</h3>
+                    <p class="region-desc" data-i18n="region_draenor_desc">Древний мир орков до разрушения</p>
                 </div>
             </a>
 
@@ -86,8 +92,8 @@
                     <div class="region-overlay"></div>
                 </div>
                 <div class="region-content">
-                    <h3 class="region-name">Запределье</h3>
-                    <p class="region-desc">Осколки разрушенного Дренора</p>
+                    <h3 class="region-name" data-i18n="region_outland">Запределье</h3>
+                    <p class="region-desc" data-i18n="region_outland_desc">Осколки разрушенного Дренора</p>
                 </div>
             </a>
 
@@ -97,8 +103,8 @@
                     <div class="region-overlay"></div>
                 </div>
                 <div class="region-content">
-                    <h3 class="region-name">Аргус</h3>
-                    <p class="region-desc">Родной мир эредаров и Легиона</p>
+                    <h3 class="region-name" data-i18n="region_argus">Аргус</h3>
+                    <p class="region-desc" data-i18n="region_argus_desc">Родной мир эредаров и Легиона</p>
                 </div>
             </a>
 
@@ -108,8 +114,8 @@
                     <div class="region-overlay"></div>
                 </div>
                 <div class="region-content">
-                    <h3 class="region-name">Тёмные земли</h3>
-                    <p class="region-desc">Царство смерти и загробный мир</p>
+                    <h3 class="region-name" data-i18n="region_shadowlands">Тёмные земли</h3>
+                    <p class="region-desc" data-i18n="region_shadowlands_desc">Царство смерти и загробный мир</p>
                 </div>
             </a>
 
@@ -119,13 +125,12 @@
     <!-- ===== ПОДВАЛ ===== -->
     <footer class="site-footer">
         <div class="container">
-            <p>© 2025-2026 Атлас Варкрафта. Учебный проект.</p>
-            <p class="footer-note">
-                World of Warcraft © Blizzard Entertainment. 
-                Все материалы принадлежат их правообладателям.
-            </p>
+            <p data-i18n="footer_text_index">© 2025-2026 Атлас Варкрафта. Учебный проект.</p>
+            <p class="footer-note" data-i18n="footer_note_index">World of Warcraft © Blizzard Entertainment. Все материалы принадлежат их правообладателям.</p>
         </div>
     </footer>
-
+    
+    <!-- Подключаем скрипт языка -->
+    <script src="js/lang.js"></script>
 </body>
 </html>

@@ -13,7 +13,10 @@
     const TILE_SIZE = 256;
 
     // --- Загружаем конфиг из файла, потом инициализируем карту ---
-    fetch('../data/map-config.json?_=' + Date.now())
+    // --- Загружаем конфиг из файла в зависимости от языка ---
+    const lang = window.__ATLAS_LANG__ || 'ru';
+    const configFile = lang === 'en' ? '../data/map-config_en.json' : '../data/map-config.json';
+    fetch(configFile + '?_=' + Date.now())
         .then(r => r.json())
         .then(configs => {
             const cfg = configs[regionId];
@@ -50,7 +53,12 @@
         const northEast = map.unproject([MAP_WIDTH, 0], MAX_ZOOM);
         const bounds = new L.LatLngBounds(southWest, northEast);
 
-        L.tileLayer(`../tiles/${regionId}/{z}/{x}/{y}.jpg`, {
+        // Определяем текущий язык (английский или русский)
+        const currentLang = window.__ATLAS_LANG__ || 'ru';
+        // Выбираем папку в зависимости от языка
+        const tileFolder = currentLang === 'en' ? 'tiles_en' : 'tiles';
+
+        L.tileLayer(`../${tileFolder}/${regionId}/{z}/{x}/{y}.jpg`, {
             tileSize: TILE_SIZE,
             minZoom: 0,
             maxZoom: MAX_ZOOM,
@@ -61,22 +69,26 @@
         }).addTo(map);
 
         map.fitBounds(bounds);
-        map.setMaxBounds(bounds);
+        map.setMaxBounds(bounds.pad(0.04));
 
         L.control.zoom({ position: 'bottomright' }).addTo(map);
 
         const isEditMode = new URLSearchParams(window.location.search).get('edit') === '1';
 
+        // --- Загрузка зон (с учётом языка) ---
         if (!isEditMode) {
-            fetch('../data/zones.json?_=' + Date.now())
-                .then(r => r.ok ? r.json() : Promise.reject('zones.json не найден'))
+            const lang = window.__ATLAS_LANG__ || 'ru';
+            const zonesFile = lang === 'en' ? '../data/zones_en.json' : '../data/zones.json';
+
+            fetch(zonesFile + '?_=' + Date.now())
+                .then(r => r.ok ? r.json() : Promise.reject('Файл зон не найден: ' + zonesFile))
                 .then(data => {
                     const zones = data[regionId];
                     if (!zones || !zones.length) {
                         console.warn('[leaflet] Нет зон для региона:', regionId);
                         return;
                     }
-                    console.log('[leaflet] Загружено зон:', zones.length);
+                    console.log('[leaflet] Загружено зон:', zones.length, '(', lang, ')');
                     addZones(zones);
                 })
                 .catch(err => console.error('[leaflet]', err));
@@ -93,7 +105,6 @@
                 let shape;
 
                 if (zone.points && Array.isArray(zone.points)) {
-                    // --- Полигон ---
                     const latlngs = zone.points.map(([x, y]) => {
                         const px = x * MAP_WIDTH / 100;
                         const py = y * MAP_HEIGHT / 100;
@@ -107,9 +118,7 @@
                         interactive: true,
                         className: 'leaflet-zone'
                     }).addTo(map);
-
                 } else {
-                    // --- Прямоугольник ---
                     const x1 = zone.x * MAP_WIDTH / 100;
                     const y1 = zone.y * MAP_HEIGHT / 100;
                     const x2 = (zone.x + zone.w) * MAP_WIDTH / 100;
@@ -128,7 +137,6 @@
                     }).addTo(map);
                 }
 
-                // Hover — подсветка
                 shape.on('mouseover', function() {
                     this.setStyle({ weight: 2, fillOpacity: 0.25 });
                 });
@@ -136,19 +144,16 @@
                     this.setStyle({ weight: 0, fillOpacity: 0 });
                 });
 
-                // Клик — переход или панель
                 shape.on('click', function() {
                     const url = (zone.url || '').trim();
                     const isExternal = url.startsWith('http');
                     const isValidInternal = url && !isExternal && url !== '-';
 
-                    // Внутренняя ссылка (например, на другой html-файл)
                     if (isValidInternal) {
                         window.location.href = url;
                         return;
                     }
 
-                    // Внешняя ссылка (Wowpedia) — открываем панель
                     if (isExternal) {
                         if (window.__openWikiPanel) {
                             window.__openWikiPanel(zone);
@@ -158,13 +163,11 @@
                         return;
                     }
 
-                    // url "-" или пусто — просто открываем панель с описанием
                     if (window.__openWikiPanel) {
                         window.__openWikiPanel(zone);
                     }
                 });
 
-                // Подсказка
                 shape.bindTooltip(zone.name, {
                     sticky: true,
                     direction: 'top',
@@ -173,7 +176,7 @@
             });
         }
 
-        // Экспортируем карту для редактора
+        // Экспортируем для редактора
         window.__atlasMap = map;
         window.__atlasConfig = cfg;
         window.__atlasRegion = regionId;

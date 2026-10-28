@@ -20,42 +20,50 @@
     <header class="region-header">
         <a href="../index.html" class="back-btn">
             <span class="back-arrow">←</span>
-            <span>На главную</span>
+            <span data-i18n="back_btn">На главную</span>
         </a>
-        <h1 class="region-title">Азерот</h1>
-        <a href="../about.html" class="header-link">О проекте</a>
+        <div class="lang-switcher">
+            <a href="?lang=ru" class="lang-btn" id="lang-ru">RU</a>
+            <span>|</span>
+            <a href="?lang=en" class="lang-btn" id="lang-en">EN</a>
+        </div>
+        <h1 class="region-title" data-i18n="title_azeroth">Азерот</h1>
+        <a href="../about.html" class="header-link" data-i18n="nav_about">О проекте</a>
     </header>
 
-    <div class="hint">
+    <div class="hint" data-i18n="hint">
         💡 Нажмите на регион, чтобы открыть подробную карту. Колёсико — зум.
     </div>
 
     <main class="map-wrapper">
         <div id="leaflet-map"></div>
     </main>
+    
     <!-- Боковая панель с превью статьи -->
     <aside class="wiki-panel" id="wiki-panel">
         <div class="wiki-panel-header">
-            <span class="wiki-panel-title" id="wiki-panel-title">Статья</span>
+            <span class="wiki-panel-title" id="wiki-panel-title" data-i18n="article_title">Статья</span>
             <button class="wiki-panel-close" id="wiki-panel-close" aria-label="Закрыть">✕</button>
         </div>
         <div class="wiki-panel-body" id="wiki-panel-body">
-            <div class="wiki-panel-loading">Загрузка...</div>
+            <div class="wiki-panel-loading" data-i18n="loading_text">Загрузка...</div>
         </div>
         <div class="wiki-panel-footer">
-            <a class="wiki-panel-link" id="wiki-panel-link" href="#" target="_blank" rel="noopener">
+            <a class="wiki-panel-link" id="wiki-panel-link" href="#" target="_blank" rel="noopener" data-i18n="read_more">
                 Читать полностью на Wowpedia →
             </a>
         </div>
     </aside>
+    
     <footer class="region-footer">
-        <p>© 2025-2026 Атлас Варкрафта. World of Warcraft © Blizzard Entertainment.</p>
+        <p data-i18n="footer_text">© 2025-2026 Атлас Варкрафта. World of Warcraft © Blizzard Entertainment.</p>
     </footer>
 
+    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="../js/leaflet-map.js"></script>
-    <script src="../js/editor-leaflet.js"></script>
+    <script src="../js/lang.js"></script>         <!-- 1. Сначала язык -->
+    <script src="../js/leaflet-map.js"></script>  <!-- 2. Потом карта -->
     <script src="../js/wiki-panel.js"></script>
-
+    <script src="../js/editor-leaflet.js"></script>
 </body>
 </html>
