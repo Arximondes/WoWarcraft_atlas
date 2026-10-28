@@ -36,6 +36,7 @@
             hint: "💡 Нажмите на регион, чтобы открыть подробную карту. Колёсико — зум.",
             read_more: "Читать полностью на Wowpedia →",
             back_btn: "На главную",
+            meta_description: "Интерактивный атлас вселенной Warcraft. Исследуйте Азерот, Дренор, Запределье, Аргус и Тёмные Земли. Кликайте на локации и читайте их историю.",
             
             // Карточки на главной
             region_azeroth: "Азерот", region_azeroth_desc: "Весь мир целиком. Выберите континент",
@@ -89,7 +90,7 @@
             hint: "💡 Click on a region to open the detailed map. Scroll to zoom.",
             read_more: "Read more on Wowpedia →",
             back_btn: "Back to Home",
-
+            meta_description: "Interactive atlas of the Warcraft universe. Explore Azeroth, Draenor, Outland, Argus, and the Shadowlands. Click on locations to read their lore.",
             // Region cards
             region_azeroth: "Azeroth", region_azeroth_desc: "The whole world. Choose a continent",
             region_draenor: "Draenor", region_draenor_desc: "The ancient orc world before its destruction",
@@ -127,6 +128,38 @@
                 el.innerHTML = dict[key];
             }
         });
+                // --- Динамическое обновление SEO-тегов ---
+        // 1. Меняем язык документа (<html lang="...">)
+        document.documentElement.lang = currentLang;
+
+        // 2. Меняем описание (meta description)
+        const metaDesc = document.querySelector('meta[name="description"]');
+        if (metaDesc && dict['meta_description']) {
+            metaDesc.setAttribute('content', dict['meta_description']);
+        }
+
+        // 3. Меняем заголовок вкладки (<title>)
+        // (этот код мы писали ранее, он должен быть здесь)
+        const regionTitles = {
+            'azeroth': 'title_azeroth',
+            'draenor': 'title_draenor',
+            'outland': 'title_outland',
+            'argus': 'title_argus',
+            'shadowlands': 'title_shadowlands'
+        };
+
+        const pathParts = window.location.pathname.split('/');
+        const fileName = pathParts[pathParts.length - 1].replace('.html', '');
+        
+        if (regionTitles[fileName]) {
+            const titleKey = regionTitles[fileName];
+            document.title = `${translations[currentLang][titleKey]} — ${translations[currentLang]['logo_text']}`;
+        } else if (fileName === 'about') {
+            document.title = `${translations[currentLang]['about_title']} — ${translations[currentLang]['logo_text']}`;
+        } else {
+            // Главная страница
+            document.title = `${translations[currentLang]['logo_text']} — ${currentLang === 'en' ? 'Interactive Atlas' : 'Интерактивный атлас'}`;
+        }
     }
 
     // Запускаем перевод
