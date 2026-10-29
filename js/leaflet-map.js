@@ -12,9 +12,8 @@
 
     const TILE_SIZE = 256;
 
-    // --- Загружаем конфиг из файла, потом инициализируем карту ---
     // --- Загружаем конфиг из файла в зависимости от языка ---
-    const lang = window.__ATLAS_LANG__ || 'ru';
+    const lang = window.__ATLAS_LANG__ || 'en';
     const configFile = lang === 'en' ? '../data/map-config_en.json' : '../data/map-config.json';
     fetch(configFile + '?_=' + Date.now())
         .then(r => r.json())
@@ -26,7 +25,7 @@
             }
             initMap(cfg);
         })
-        .catch(err => console.error('[leaflet] Не удалось загрузить map-config.json:', err));
+        .catch(err => console.error('[leaflet] Не удалось загрузить map-config:', err));
 
     // ============================================
     //   ИНИЦИАЛИЗАЦИЯ КАРТЫ
@@ -54,7 +53,7 @@
         const bounds = new L.LatLngBounds(southWest, northEast);
 
         // Определяем текущий язык (английский или русский)
-        const currentLang = window.__ATLAS_LANG__ || 'ru';
+        const currentLang = window.__ATLAS_LANG__ || 'en';
         // Выбираем папку в зависимости от языка
         const tileFolder = currentLang === 'en' ? 'tiles_en' : 'tiles';
 
@@ -77,7 +76,7 @@
 
         // --- Загрузка зон (с учётом языка) ---
         if (!isEditMode) {
-            const lang = window.__ATLAS_LANG__ || 'ru';
+            const lang = window.__ATLAS_LANG__ || 'en';
             const zonesFile = lang === 'en' ? '../data/zones_en.json' : '../data/zones.json';
 
             fetch(zonesFile + '?_=' + Date.now())

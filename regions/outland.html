@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Интерактивная карта всего Запределья из вселенной Warcraft.">
-    <title>Запределье — Атлас Варкрафта</title>
+    <meta name="description" content="Interactive map of Outland from the Warcraft universe.">
+    <title>Outland — Warcraft Atlas</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,43 +20,42 @@
     <header class="region-header">
         <a href="../index.html" class="back-btn">
             <span class="back-arrow">←</span>
-            <span data-i18n="back_btn">На главную</span>
+            <span data-i18n="back_btn">Back to Home</span>
         </a>
         <div class="lang-switcher">
             <a href="?lang=ru" class="lang-btn" id="lang-ru">RU</a>
             <span>|</span>
             <a href="?lang=en" class="lang-btn" id="lang-en">EN</a>
         </div>
-        <h1 class="region-title" data-i18n="title_outland">Запределье</h1>
-        <a href="../about.html" class="header-link" data-i18n="nav_about">О проекте</a>
+        <h1 class="region-title" data-i18n="title_outland">Outland</h1>
+        <a href="../about.html" class="header-link" data-i18n="nav_about">About</a>
     </header>
 
     <div class="hint" data-i18n="hint">
-        💡 Нажмите на регион, чтобы открыть подробную карту. Колёсико — зум.
+        💡 Click on a region to open the detailed map. Scroll to zoom.
     </div>
 
     <main class="map-wrapper">
         <div id="leaflet-map"></div>
     </main>
     
-    <!-- Боковая панель с превью статьи -->
     <aside class="wiki-panel" id="wiki-panel">
         <div class="wiki-panel-header">
-            <span class="wiki-panel-title" id="wiki-panel-title" data-i18n="article_title">Статья</span>
-            <button class="wiki-panel-close" id="wiki-panel-close" aria-label="Закрыть">✕</button>
+            <span class="wiki-panel-title" id="wiki-panel-title" data-i18n="article_title">Article</span>
+            <button class="wiki-panel-close" id="wiki-panel-close" aria-label="Close">✕</button>
         </div>
         <div class="wiki-panel-body" id="wiki-panel-body">
-            <div class="wiki-panel-loading" data-i18n="loading_text">Загрузка...</div>
+            <div class="wiki-panel-loading" data-i18n="loading_text">Loading...</div>
         </div>
         <div class="wiki-panel-footer">
             <a class="wiki-panel-link" id="wiki-panel-link" href="#" target="_blank" rel="noopener" data-i18n="read_more">
-                Читать полностью на Wowpedia →
+                Read more on Warcraft Wiki →
             </a>
         </div>
     </aside>
     
     <footer class="region-footer">
-        <p data-i18n="footer_text">© 2025-2026 Атлас Варкрафта. World of Warcraft © Blizzard Entertainment.</p>
+        <p data-i18n="footer_text">© 2025-2026 Warcraft Atlas. World of Warcraft © Blizzard Entertainment.</p>
     </footer>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
